@@ -38,38 +38,26 @@ body {
 }
 
 #factBox {
-  margin-top: 20px;
+  margin-top: 16px;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
   padding: 15px;
   background: #fffde7;
   border: 1px solid #ffd600;
   border-radius: 5px;
-  display: inline-block;
+  display: block;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
-.popper-gif {
-  position: absolute;
-  top: 80px;
-  width: 160px;
-  height: 160px;
-  z-index: 20;
-  pointer-events: none;
-}
-
-#popper-left {
-  left: calc(50% - 240px); /* 400px/2 + 40px margin */
-}
-
+/* Removed party popper styles */
+.popper-gif,
+#popper-left,
 #popper-right {
-  right: calc(50% - 240px);
-}
-
-.popper-gif img {
-  width: 100%;
-  height: 100%;
+  display: none !important;
 }
 
 #lives-container {
@@ -91,4 +79,73 @@ body {
 
 .heart.lost {
   opacity: 0.2;
+}
+
+#gameOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  font-size: 2em;
+  color: #0288d1;
+  font-weight: bold;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s;
+}
+
+#gameOverlay.show {
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 0.7s;
+}
+
+#canvasOverlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 320px;
+  min-height: 80px;
+  width: 400px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6em;
+  color: #0288d1;
+  font-weight: bold;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s;
+}
+
+#canvasOverlay.show {
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 0.7s;
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#buttonRow {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 0;
 }

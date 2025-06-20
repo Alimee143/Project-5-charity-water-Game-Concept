@@ -4,9 +4,6 @@ const startBtn = document.getElementById('startBtn');
 const scoreDiv = document.getElementById('score');
 const factBox = document.getElementById('factBox');
 
-const popperLeft = document.getElementById('popper-left');
-const popperRight = document.getElementById('popper-right');
-
 const pauseBtn = document.getElementById('pauseBtn');
 
 const facts = [
@@ -29,6 +26,10 @@ let animationId = null; // Add this at the top with your other variables
 let lastPopperScore = 0;
 let lives = 3;
 
+// Shake effect variables
+let shakeFrames = 0;
+let shakeMagnitude = 0;
+
 function resetGame() {
   score = 0;
   drop = { x: 200, y: 500, radius: 20 };
@@ -40,6 +41,7 @@ function resetGame() {
   scoreDiv.textContent = "Score: 0";
   paused = false;
   pauseBtn.textContent = "Pause";
+  factBox.classList.add('hidden'); // Hide the fact box on reset
 }
 
 function updateLivesDisplay() {
@@ -89,12 +91,24 @@ charityWaterImg.onload = () => {
 function drawDrop() {
   const iconWidth = 70;
   const iconHeight = 85;
-  // Draw the icon centered at drop.x, drop.y
   ctx.save();
+
+  // Apply shake if active (smoother, more visible)
+  let offsetX = 0, offsetY = 0;
+  if (shakeFrames > 0) {
+    // Use a sine wave for smoother shake
+    const progress = (24 - shakeFrames) / 24; // 0 to 1
+    const angle = progress * Math.PI * 2 * 1.5; // 1.5 oscillations
+    offsetX = Math.sin(angle) * shakeMagnitude;
+    offsetY = Math.cos(angle) * (shakeMagnitude / 2);
+    shakeFrames--;
+    if (shakeFrames === 0) shakeMagnitude = 0;
+  }
+
   ctx.drawImage(
     charityWaterImg,
-    drop.x - iconWidth / 4,
-    drop.y - iconHeight / 2,
+    drop.x - iconWidth / 4 + offsetX,
+    drop.y - iconHeight / 2 + offsetY,
     iconWidth,
     iconHeight
   );
@@ -199,47 +213,47 @@ fullscreenBtn.addEventListener('click', () => {
   }
 });
 
-// Draw party popper explosion in the top-right corner at each 200-point milestone
-function drawPartyPoppers() {
-  if (score >= 200 && score % 200 < 20) {
-    // Top-right corner popper
-    ctx.save();
-    ctx.translate(canvas.width - 40, 40);
-    drawPopperShape();
-    drawPopperExplosion();
-    ctx.restore();
+// --- Confetti burst logic ---
+let confettiParticles = [];
+let confettiTimer = 0;
+
+function spawnConfettiBurst() {
+  confettiParticles = [];
+  for (let i = 0; i < 40; i++) {
+    const angle = (Math.PI * 2 * i) / 40;
+    const speed = Math.random() * 3 + 3;
+    confettiParticles.push({
+      x: canvas.width - 60,
+      y: 60,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      color: ["#ff5252", "#ffd600", "#69f0ae", "#40c4ff"][i % 4],
+      size: Math.random() * 6 + 4,
+      life: 0
+    });
   }
+  confettiTimer = 45; // frames to show confetti
 }
 
-// Helper to draw a simple party popper
-function drawPopperShape() {
-  // Cone
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(-12, 30);
-  ctx.lineTo(12, 30);
-  ctx.closePath();
-  ctx.fillStyle = "#ffb300";
-  ctx.fill();
-
-  // Top circle
-  ctx.beginPath();
-  ctx.arc(0, 0, 8, 0, Math.PI * 2);
-  ctx.fillStyle = "#e040fb";
-  ctx.fill();
-}
-
-// Helper to draw an explosion of confetti
-function drawPopperExplosion() {
-  for (let i = 0; i < 16; i++) {
+function drawConfetti() {
+  confettiParticles.forEach(p => {
     ctx.save();
-    ctx.rotate((Math.PI * 2 * i) / 16);
+    ctx.globalAlpha = Math.max(0, 1 - p.life / 45);
+    ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(0, -35, 4, 0, Math.PI * 2);
-    ctx.fillStyle = ["#ff5252", "#ffd600", "#69f0ae", "#40c4ff"][i % 4];
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
-  }
+  });
+}
+
+function updateConfetti() {
+  confettiParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy + p.life * 0.08; // gravity
+    p.life++;
+  });
+  confettiParticles = confettiParticles.filter(p => p.life < 45);
 }
 
 function moveEntities() {
@@ -269,10 +283,14 @@ function checkCollisions() {
     if (dist < drop.radius + o.size) {
       lives--;
       updateLivesDisplay();
+
+      // Trigger shake (make it last longer and more visible)
+      shakeFrames = 24;         // Increased from 12 to 24 for slower shake
+      shakeMagnitude = 16;      // Increased from 8 to 16 for more visible shake
+
       if (lives <= 0) {
         endGame();
       }
-      // Remove the obstacle that was hit
       obstacles = obstacles.filter(obj => obj !== o);
       break;
     }
@@ -281,21 +299,35 @@ function checkCollisions() {
 
 function endGame() {
   gameActive = false;
-  factBox.textContent = facts[Math.floor(Math.random() * facts.length)];
-  factBox.classList.remove('hidden');
-  startBtn.disabled = false;
-}
+  // Draw faded hearts one last time before overlay
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawCharityWaterBrand();
+  drawDrop();
+  drawObstacles();
+  drawCollectibles();
+  drawLives();
+  // Increase bucket count by 1 for every 10 drops saved (score/10)
+  let GallonX = Math.floor(score / 10 / 10);
+  // Show overlay after a short delay for fade effect
+  
+  setTimeout(() => {
+    const overlay = document.getElementById('canvasOverlay');
+    if (GallonX == 1) {
+      overlay.textContent = `Good Job! You saved ${GallonX} gallon of Water!`;
+    } else {
+      overlay.textContent = `Good Job! You saved ${GallonX} gallons of Water!`;
+    }
 
-function updatePartyPoppers() {
-  // Show for 1.5 seconds at each 200-point milestone
-  if (score > 0 && score % 200 === 0 && gameActive) {
-    popperLeft.classList.remove('hidden');
-    popperRight.classList.remove('hidden');
-    setTimeout(() => {
-      popperLeft.classList.add('hidden');
-      popperRight.classList.add('hidden');
-    }, 1500);
-  }
+    overlay.classList.add('show');
+    overlay.classList.remove('hidden');
+    startBtn.disabled = false;
+
+    // Show fact below the buttons
+    factBox.textContent = facts[Math.floor(Math.random() * facts.length)];
+    factBox.classList.remove('hidden');
+    // Optionally, scroll to the buttons/factBox area for visibility
+    startBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 400); // 400ms delay so player sees the last heart fade
 }
 
 // Call this in your gameLoop after updating the score
@@ -303,12 +335,12 @@ function gameLoop() {
   if (!gameActive || paused) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawCharityWaterBrand(); // <-- Add this line
+  drawCharityWaterBrand();
 
   drawDrop();
   drawObstacles();
   drawCollectibles();
-  drawLives(); // <-- Add this line
+  drawLives();
   moveEntities();
   checkCollisions();
 
@@ -329,9 +361,17 @@ function gameLoop() {
     speed = 4.5 + (score - 200) * 0.02;
   }
 
-  updatePartyPoppers();
+  // Confetti burst at each 100-point milestone
+  if (score > 0 && score % 100 === 0 && confettiTimer === 0) {
+    spawnConfettiBurst();
+  }
+  if (confettiTimer > 0) {
+    drawConfetti();
+    updateConfetti();
+    confettiTimer--;
+  }
 
-  animationId = requestAnimationFrame(gameLoop); // Save the frame id
+  animationId = requestAnimationFrame(gameLoop);
 }
 
 // Update your reset/start logic:
@@ -343,10 +383,14 @@ startBtn.addEventListener('click', () => {
     animationId = null;
   }
   resetGame();
-  factBox.classList.add('hidden');
+  factBox.classList.add('hidden'); // Hide the fact box when starting/resetting
   startBtn.textContent = "Reset";
   gameActive = true;
   gameLoop();
+
+  // Hide canvas overlay
+  document.getElementById('canvasOverlay').classList.remove('show');
+  document.getElementById('canvasOverlay').classList.add('hidden');
 });
 
 pauseBtn.addEventListener('click', () => {
