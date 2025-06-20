@@ -313,12 +313,12 @@ function endGame() {
   setTimeout(() => {
     const overlay = document.getElementById('canvasOverlay');
     if(GallonX < 1) {
-     overlay.textContent = `Keep up! You almost saved 1 gallon of Water!`;
+     overlay.textContent = `Keep up! You almost saved 1 gallon of clean Water!`;
 
     } else if (GallonX == 1) {
-      overlay.textContent = `Good Job! You saved ${GallonX} gallon of Water!`;
+      overlay.textContent = `Good Job! You saved ${GallonX} gallon of clean Water!`;
     } else {
-      overlay.textContent = `Good Job! You saved ${GallonX} gallons of Water!`;
+      overlay.textContent = `Good Job! You saved ${GallonX} gallons of clean Water!`;
     }
 
     overlay.classList.add('show');
