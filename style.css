@@ -1,0 +1,94 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #e0f7fa;
+}
+
+#gameCanvas {
+  background: #b3e5fc;
+  border: 2px solid #0288d1;
+  display: block;
+  margin: 0 auto 20px auto;
+}
+
+#score {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+#startBtn {
+  padding: 10px 20px;
+  font-size: 1em;
+  background: #0288d1;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#pauseBtn {
+  padding: 10px 20px;
+  font-size: 1em;
+  background: #ffd600;
+  color: #333;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+#factBox {
+  margin-top: 20px;
+  padding: 15px;
+  background: #fffde7;
+  border: 1px solid #ffd600;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.hidden {
+  display: none;
+}
+
+.popper-gif {
+  position: absolute;
+  top: 80px;
+  width: 160px;
+  height: 160px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+#popper-left {
+  left: calc(50% - 240px); /* 400px/2 + 40px margin */
+}
+
+#popper-right {
+  right: calc(50% - 240px);
+}
+
+.popper-gif img {
+  width: 100%;
+  height: 100%;
+}
+
+#lives-container {
+  position: absolute;
+  top: 32px;
+  right: 50%;
+  transform: translateX(200px); /* 400px/2, half the canvas width */
+  z-index: 30;
+  display: flex;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.heart {
+  font-size: 2em;
+  margin: 0 1px;
+  transition: opacity 0.2s;
+}
+
+.heart.lost {
+  opacity: 0.2;
+}
